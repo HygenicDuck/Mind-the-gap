@@ -16,7 +16,7 @@ public class test : MonoBehaviour {
 
 	const int NUMBER_OF_REQUIRED_WORDS = 3;
 	const int MINIMUM_LENGTH_OF_REQUIRED_WORDS = 6;
-
+	const int MINIMUM_SCORE_REQUIRED = 1000;
 
 	// Use this for initialization
 	void Start () 
@@ -246,6 +246,7 @@ public class test : MonoBehaviour {
 		int m_bestScore = int.MaxValue;
 		SegmentData m_segmentData;
 		Puzzle m_bestPuzzle;
+		List<Puzzle> m_qualifyingPuzzleList;
 		public static int s_totalCount = 0;
 
 		void Combinations(int[] arr, int len, int startPosition, int[] result)
@@ -265,6 +266,7 @@ public class test : MonoBehaviour {
 
 		public Puzzle FindBestPuzzleForSegment(SegmentData segData)
 		{
+			List<Puzzle> m_qualifyingPuzzleList = new List<Puzzle>();
 			m_segmentData = segData;
 			m_bestScore = int.MaxValue;
 			int wordCount = segData.WordsCount();
@@ -303,16 +305,35 @@ public class test : MonoBehaviour {
 				totalScore += m_segmentData.WordRank(i);
 			}
 
-			if (totalScore < m_bestScore)
+			if (totalScore < MINIMUM_SCORE_REQUIRED)
 			{
-				m_bestScore = totalScore;
-				m_bestPuzzle = new Puzzle(m_segmentData);
+				Puzzle puzzle = new Puzzle(m_segmentData);
 				foreach(int j in result)
 				{
-					m_bestPuzzle.AddWord(m_segmentData.Word(j));
+					puzzle.AddWord(m_segmentData.Word(j));
 				}
-				m_bestPuzzle.m_score = totalScore;
+				puzzle.m_score = totalScore;
+				int i=0;
+				for(i=0; i<m_qualifyingPuzzleList.Count; i++)
+				{
+					if (m_qualifyingPuzzleList[i].m_score > totalScore)
+					{
+						break;
+					}
+				}
+				m_qualifyingPuzzleList.Insert(i, puzzle);
 			}
+
+//			if (totalScore < m_bestScore)
+//			{
+//				m_bestScore = totalScore;
+//				m_bestPuzzle = new Puzzle(m_segmentData);
+//				foreach(int j in result)
+//				{
+//					m_bestPuzzle.AddWord(m_segmentData.Word(j));
+//				}
+//				m_bestPuzzle.m_score = totalScore;
+//			}
 
 			s_totalCount++;
 		}
