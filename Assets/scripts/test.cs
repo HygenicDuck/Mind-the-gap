@@ -10,7 +10,7 @@ public class test : MonoBehaviour {
 
 	string[] m_wordArray;
 
-	Dictionary<string, List<string>> m_segmentDictionary;
+	Dictionary<string, SegmentData> m_segmentDictionary;
 
 	// Use this for initialization
 	void Start () 
@@ -77,12 +77,45 @@ public class test : MonoBehaviour {
 		string m_segment;
 		List<string> m_wordsContainingSegment;
 		List<int> m_rankOfWords;
+
+		public SegmentData(string segment)
+		{
+			m_segment = segment;
+			m_wordsContainingSegment = new List<string>();
+			m_rankOfWords = new List<int>();
+		}
+
+		public int WordsCount()
+		{
+			return m_wordsContainingSegment.Count;
+		}
+
+		public void AddWord(string word, int rank)
+		{
+			m_wordsContainingSegment.Add(word);
+			m_rankOfWords.Add(rank);
+		}
+
+		public int WordRank(int wordNum)
+		{
+			return m_rankOfWords[wordNum];
+		}
+
+		public string Word(int wordNum)
+		{
+			return m_wordsContainingSegment[wordNum];
+		}
+
+		public string Segment()
+		{
+			return m_segment;
+		}
 	}
 
 	public void BuildSegmentDictionary()
 	{
 		// go through all 3-letter sequences (AAA, AAB, AAC, etc.) and make a list of all words that contain that sequence.
-		m_segmentDictionary = new Dictionary<string, List<string>>();
+		m_segmentDictionary = new Dictionary<string, SegmentData>();
 
 		for(char a='a'; a<='z'; a++)
 		{
@@ -91,31 +124,75 @@ public class test : MonoBehaviour {
 				for(char c='a'; c<='z'; c++)
 				{
 					string segment = a.ToString() + b.ToString() + c.ToString();
-					List<string> words = GetListOfWordsContainingSegment(segment);
-					if (words.Count > 0)
+					SegmentData segData = BuildSegmentData(segment);
+					if (segData.WordsCount() > 0)
 					{
-						m_segmentDictionary.Add(segment,words);
+						m_segmentDictionary.Add(segment,segData);
 					}
 
-					Debug.Log(segment+" : "+words.Count);
+					Debug.Log(segment+" : "+segData.WordsCount());
 				}
 			}
 		}
 
 		Debug.Log("Count : "+m_segmentDictionary.Count);
+
+		SegmentData bestSeg = FindBestSegment();
+		Debug.Log("BestSeg : "+bestSeg.Segment()+" : "+bestSeg.Word(0)+", "+bestSeg.Word(1)+", "+bestSeg.Word(2));
 	}
 
-	List<string> GetListOfWordsContainingSegment(string segment)
+//	List<string> GetListOfWordsContainingSegment(string segment)
+//	{
+//		List<string> outList = new List<string>();
+//		foreach(string word in m_wordArray)
+//		{
+//			if (word.Contains(segment))
+//			{
+//				// add to list
+//				outList.Add(word);
+//			}
+//		}
+//		return outList;
+//	}
+
+	SegmentData BuildSegmentData(string segment)
 	{
-		List<string> outList = new List<string>();
-		foreach(string word in m_wordArray)
+		SegmentData segData = new SegmentData(segment);
+		for(int i=0; i<m_wordArray.Length; i++)
 		{
+			string word = m_wordArray[i];
 			if (word.Contains(segment))
 			{
 				// add to list
-				outList.Add(word);
+				segData.AddWord(word,i);
 			}
 		}
-		return outList;
+
+		return segData;
+	}
+
+	SegmentData FindBestSegment()
+	{
+		const int NUMBER_OF_REQUIRED_WORDS = 3;
+		const int MINIMUM_LENGTH_OF_REQUIRED_WORDS = 6;
+
+		SegmentData bestSeg = null;
+		int bestScore = int.MaxValue;
+
+		foreach(KeyValuePair<string, SegmentData> item in m_segmentDictionary)
+		{
+			SegmentData segData = item.Value;
+			if (segData.WordsCount() >= NUMBER_OF_REQUIRED_WORDS)
+			{
+				int score = segData.WordRank(0) + segData.WordRank(1) + segData.WordRank(2);
+				if (score < bestScore)
+				{
+					bestScore = score;
+					bestSeg = segData;
+				}
+			}
+		}
+
+		return bestSeg;
 	}
 }
