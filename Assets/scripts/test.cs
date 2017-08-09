@@ -15,7 +15,7 @@ public class test : MonoBehaviour {
 	Dictionary<string, SegmentData> m_segmentDictionary;
 
 	const int NUMBER_OF_REQUIRED_WORDS = 3;
-	const int MINIMUM_LENGTH_OF_REQUIRED_WORDS = 5;
+	const int MINIMUM_LENGTH_OF_REQUIRED_WORDS = 6;
 
 
 	// Use this for initialization
@@ -47,7 +47,8 @@ public class test : MonoBehaviour {
 		BuildSegmentDictionary();
 
 		Puzzle puzzle = FindBestPuzzle();
-		Debug.Log("BestPuzzle : "+puzzle.SegmentData().Segment()+" : "+puzzle.Word(0)+", "+puzzle.Word(1)+", "+puzzle.Word(2));
+		Debug.Log("BestPuzzle : "+puzzle.SegmentData().Segment()+" "+puzzle.m_score+" : "+puzzle.Word(0)+", "+puzzle.Word(1)+", "+puzzle.Word(2));
+		Debug.Log("total combos : "+BestPuzzleFinder.s_totalCount);
 	}
 	
 	// Update is called once per frame
@@ -245,6 +246,7 @@ public class test : MonoBehaviour {
 		int m_bestScore = int.MaxValue;
 		SegmentData m_segmentData;
 		Puzzle m_bestPuzzle;
+		public static int s_totalCount = 0;
 
 		void Combinations(int[] arr, int len, int startPosition, int[] result)
 		{
@@ -283,6 +285,7 @@ public class test : MonoBehaviour {
 				return null;
 			}
 
+			// recursive search
 			Combinations(allIndices, NUMBER_OF_REQUIRED_WORDS, 0, new int[NUMBER_OF_REQUIRED_WORDS]);
 
 			// when we reach here, all the combinations have been explored, and the best puzzle will have been found.
@@ -310,6 +313,8 @@ public class test : MonoBehaviour {
 				}
 				m_bestPuzzle.m_score = totalScore;
 			}
+
+			s_totalCount++;
 		}
 
 	}
