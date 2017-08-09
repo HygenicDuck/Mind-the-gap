@@ -46,8 +46,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Letter.cs" />
-     <Compile Include="Assets\LetterRing.cs" />
+     <Compile Include="Assets\scripts\Letter.cs" />
+     <Compile Include="Assets\scripts\LetterRing.cs" />
+     <Compile Include="Assets\scripts\test.cs" />
+     <None Include="Assets\Resources\top 5000 words.txt" />
  <Reference Include="UnityEngine.UI">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
