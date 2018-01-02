@@ -15,8 +15,8 @@ public class test : MonoBehaviour {
 	Dictionary<string, SegmentData> m_segmentDictionary;
 
 	const int NUMBER_OF_REQUIRED_WORDS = 3;
-	const int MINIMUM_LENGTH_OF_REQUIRED_WORDS = 6;
-	const int MINIMUM_SCORE_REQUIRED = 1000;
+	const int MINIMUM_LENGTH_OF_REQUIRED_WORDS = 7;
+	const int MINIMUM_SCORE_REQUIRED = 2000;
 
 	// Use this for initialization
 	void Start () 
@@ -46,8 +46,13 @@ public class test : MonoBehaviour {
 
 		BuildSegmentDictionary();
 
-		Puzzle puzzle = FindBestPuzzle();
-		Debug.Log("BestPuzzle : "+puzzle.SegmentData().Segment()+" "+puzzle.m_score+" : "+puzzle.Word(0)+", "+puzzle.Word(1)+", "+puzzle.Word(2));
+		List<Puzzle> puzzles = FindBestPuzzles();
+		Debug.Log("Best Puzzles : ");
+		for (int i = 0; (i < 1000) && (i < puzzles.Count); i++)
+		{
+			Debug.Log (">"+(i+1)+" : " + puzzles [i].SegmentData ().Segment () + " " + puzzles [i].m_score + " : " + puzzles [i].Word (0) + ", " + puzzles [i].Word (1) + ", " + puzzles [i].Word (2));
+		}
+		Debug.Log("total puzzles : "+puzzles.Count);
 		Debug.Log("total combos : "+BestPuzzleFinder.s_totalCount);
 	}
 	
@@ -197,13 +202,16 @@ public class test : MonoBehaviour {
 		return segData;
 	}
 
-	Puzzle FindBestPuzzle()
+	List<Puzzle> FindBestPuzzles()
 	{
-		// goes through all segments and finds the 'best' puzzle 
+		// goes through all segments and makes an ordered list of the 'best' puzzles 
 
-		Puzzle bestPuzzle = null;
-		SegmentData bestSeg = null;
-		int bestScore = int.MaxValue;
+		//Puzzle bestPuzzle = null;
+		//SegmentData bestSeg = null;
+		//int bestScore = int.MaxValue;
+		List<Puzzle> masterPuzzleList;
+
+		masterPuzzleList = new List<Puzzle> ();
 
 		foreach(KeyValuePair<string, SegmentData> item in m_segmentDictionary)
 		{
@@ -211,24 +219,42 @@ public class test : MonoBehaviour {
 			if (segData.WordsCount() >= NUMBER_OF_REQUIRED_WORDS)
 			{
 				// find the best puzzle for this particular segment.
-				Puzzle puzzle = m_puzzleFinder.FindBestPuzzleForSegment(segData);
+				List<Puzzle> puzzles = m_puzzleFinder.FindBestPuzzleForSegment(segData);
 
-				// if it is the best puzzle overall then record this.
-				if (puzzle != null)
-				{
-					int score = puzzle.m_score;
-					if (score < bestScore)
-					{
-						bestScore = score;
-						bestSeg = segData;
-						bestPuzzle = puzzle;
-					}
-				}
+				MergeListsOfPuzzles (puzzles, masterPuzzleList);
+
+//				// if it is the best puzzle overall then record this.
+//				if (puzzle != null)
+//				{
+//					int score = puzzle.m_score;
+//					if (score < bestScore)
+//					{
+//						bestScore = score;
+//						bestSeg = segData;
+//						bestPuzzle = puzzle;
+//					}
+//				}
 			}
 		}
 
-		// we have the best puzzle in the entire english language!
-		return bestPuzzle;
+		// we have the best puzzles in the entire english language!
+		return masterPuzzleList;
+	}
+
+	void MergeListsOfPuzzles(List<Puzzle> source, List<Puzzle> dest)
+	{
+		foreach (Puzzle p in source)
+		{
+			int i=0;
+			for(i=0; i<dest.Count; i++)
+			{
+				if (dest[i].m_score > p.m_score)
+				{
+					break;
+				}
+			}
+			dest.Insert(i, p);
+		}
 	}
 
 
@@ -243,9 +269,9 @@ public class test : MonoBehaviour {
 		// class to find the 'best' puzzle of 3 words that contain a particular segment.
 		// e.g. a segment such as 'hou' is contained in many english words. I might want to find the most commonly used 3 words that that segment is used in.
 
-		int m_bestScore = int.MaxValue;
+		//int m_bestScore = int.MaxValue;
 		SegmentData m_segmentData;
-		Puzzle m_bestPuzzle;
+		//Puzzle m_bestPuzzle;
 		List<Puzzle> m_qualifyingPuzzleList;
 		public static int s_totalCount = 0;
 
@@ -264,11 +290,11 @@ public class test : MonoBehaviour {
 			}
 		}       
 
-		public Puzzle FindBestPuzzleForSegment(SegmentData segData)
+		public List<Puzzle> FindBestPuzzleForSegment(SegmentData segData)
 		{
-			List<Puzzle> m_qualifyingPuzzleList = new List<Puzzle>();
+			m_qualifyingPuzzleList = new List<Puzzle>();
 			m_segmentData = segData;
-			m_bestScore = int.MaxValue;
+			//m_bestScore = int.MaxValue;
 			int wordCount = segData.WordsCount();
 
 			List<int> wordIndices = new List<int>();
@@ -282,16 +308,19 @@ public class test : MonoBehaviour {
 			}
 			allIndices = wordIndices.ToArray();
 
-			if (allIndices.Count() < NUMBER_OF_REQUIRED_WORDS)
+			if (allIndices.Count () >= NUMBER_OF_REQUIRED_WORDS)
 			{
-				return null;
+				// recursive search
+				Combinations (allIndices, NUMBER_OF_REQUIRED_WORDS, 0, new int[NUMBER_OF_REQUIRED_WORDS]);
 			}
 
-			// recursive search
-			Combinations(allIndices, NUMBER_OF_REQUIRED_WORDS, 0, new int[NUMBER_OF_REQUIRED_WORDS]);
-
 			// when we reach here, all the combinations have been explored, and the best puzzle will have been found.
-			return m_bestPuzzle;
+			return m_qualifyingPuzzleList;
+
+//			if (m_qualifyingPuzzleList.Count > 0)
+//				return m_qualifyingPuzzleList [0];
+//			else
+//				return null;
 		}
 
 		void FoundCombination(int[] result)
@@ -302,6 +331,7 @@ public class test : MonoBehaviour {
 
 			foreach(int i in result)
 			{
+				//Debug.Log ("word "+i+" = "+m_segmentData.Word(i));
 				totalScore += m_segmentData.WordRank(i);
 			}
 
@@ -313,6 +343,7 @@ public class test : MonoBehaviour {
 					puzzle.AddWord(m_segmentData.Word(j));
 				}
 				puzzle.m_score = totalScore;
+
 				int i=0;
 				for(i=0; i<m_qualifyingPuzzleList.Count; i++)
 				{
